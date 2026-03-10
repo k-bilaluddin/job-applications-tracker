@@ -1,0 +1,6 @@
+@JobApplicationTracker.Api_HostAddress = http://localhost:5146
+
+GET {{JobApplicationTracker.Api_HostAddress}}/api/job-applications/82067bd2-7246-4191-a59c-03f0beac1efd
+Accept: application/json
+
+###
