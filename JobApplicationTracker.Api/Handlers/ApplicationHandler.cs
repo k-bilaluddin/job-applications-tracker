@@ -130,6 +130,9 @@ namespace JobApplicationTracker.Api.Handlers
                 return null;
             }
 
+            var previousStatus = entity.Status;
+            var previousNextActionDate = entity.NextActionDate;
+
             entity.JobTitle = request.JobTitle.Trim();
             entity.Location = request.Location?.Trim();
             entity.JobUrl = request.JobUrl?.Trim();
@@ -154,6 +157,29 @@ namespace JobApplicationTracker.Api.Handlers
             if (!updated)
             {
                 return null;
+            }
+
+            try
+            {
+                var updatedEvent = new JobApplicationUpdatedEvent
+                {
+                    ApplicationId = entity.Id,
+                    CompanyName = entity.CompanyName,
+                    JobTitle = entity.JobTitle,
+                    Status = entity.Status,
+                    PreviousStatus = previousStatus,
+                    NextActionDate = entity.NextActionDate,
+                    PreviousNextActionDate = previousNextActionDate,
+                    Notes = entity.Notes,
+                    UpdatedAtUtc = entity.UpdatedUtc
+                };
+
+                await _eventPublisher.PublishAsync(_rabbitMqOptions.JobApplicationUpdatedQueueName, updatedEvent, cancellationToken);
+            }
+            catch(Exception ex)
+            {
+                // Log the exception (not implemented here)
+                Console.WriteLine($"Failed to publish event: {ex.Message}");
             }
 
             return MapToResponse(entity);
