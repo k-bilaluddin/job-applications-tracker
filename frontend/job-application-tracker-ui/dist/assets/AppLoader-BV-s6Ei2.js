@@ -1,0 +1,1 @@
+import{d as t,o as a,c as o,a as n,t as r,k as p,_ as c}from"./index-vOKnIb1h.js";const d={class:"app-loader"},m={key:0},_=t({__name:"AppLoader",props:{message:{}},setup(e){return(i,s)=>(a(),o("div",d,[s[0]||(s[0]=n("div",{class:"spinner"},null,-1)),e.message?(a(),o("p",m,r(e.message),1)):p("",!0)]))}}),f=c(_,[["__scopeId","data-v-7584974f"]]);export{f as A};
