@@ -1,22 +1,31 @@
-﻿using System;
+﻿using JobApplicationTracker.Api.Interfaces;
+using JobApplicationTracker.Api.Messaging.Configurations;
+using JobApplicationTracker.Api.Messaging.Events;
+using JobApplicationTracker.Api.Messaging.Publishers;
+using JobApplicationTracker.Api.Models.Entities;
+using JobApplicationTracker.Api.Models.Request;
+using JobApplicationTracker.Api.Models.Response;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using JobApplicationTracker.Api.Interfaces;
-using JobApplicationTracker.Api.Models.Entities;
-using JobApplicationTracker.Api.Models.Request;
-using JobApplicationTracker.Api.Models.Response;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace JobApplicationTracker.Api.Handlers
 {
     public class ApplicationHandler : IApplicationHandler
     {
         private readonly IApplicationRepository _repository;
+        private readonly IMessagePublisher _eventPublisher;
+        private readonly RabbitMqOptions _rabbitMqOptions;
 
-        public ApplicationHandler(IApplicationRepository repository)
+
+        public ApplicationHandler(IApplicationRepository repository, IMessagePublisher eventPublisher, RabbitMqOptions rabbitMqOptions)
         {
             _repository = repository;
+            _eventPublisher = eventPublisher;
+            _rabbitMqOptions = rabbitMqOptions;
         }
 
         public async Task<JobApplicationResponse> CreateAsync(
@@ -62,6 +71,25 @@ namespace JobApplicationTracker.Api.Handlers
             };
 
             await _repository.InsertAsync(entity, cancellationToken);
+
+            try
+            {
+                var createdEvent = new JobApplicationCreatedEvent
+                {
+                    ApplicationId = entity.Id,
+                    CompanyName = entity.CompanyName,
+                    JobTitle = entity.JobTitle,
+                    AppliedOnUtc = entity.AppliedDate,
+                    Status = entity.Status
+                };
+
+                await _eventPublisher.PublishAsync(_rabbitMqOptions.JobApplicationCreatedQueueName, createdEvent, cancellationToken);
+            }
+            catch(Exception ex)
+            {
+                // Log the exception (not implemented here)
+                Console.WriteLine($"Failed to publish event: {ex.Message}");
+            }
 
             return MapToResponse(entity);
         }

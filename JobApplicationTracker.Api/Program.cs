@@ -1,6 +1,7 @@
 using JobApplicationTracker.Api.Errors;
 using JobApplicationTracker.Api.Handlers;
 using JobApplicationTracker.Api.Interfaces;
+using JobApplicationTracker.Api.Messaging.DependencyInjection;
 using JobApplicationTracker.Api.Models.Persistence;
 using JobApplicationTracker.Api.Repository;
 
@@ -11,6 +12,9 @@ builder.Services.Configure<MongoDbOptions>(
 
 builder.Services.AddScoped<IApplicationRepository, JobApplicationRepository>();
 builder.Services.AddScoped<IApplicationHandler, ApplicationHandler>();
+
+builder.Services.AddRabbitMqMessaging(builder.Configuration);
+
 
 builder.Services.AddControllers();
 
