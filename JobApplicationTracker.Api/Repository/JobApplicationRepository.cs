@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using JobApplicationTracker.Api.Errors;
+﻿using JobApplicationTracker.Api.Errors;
 using JobApplicationTracker.Api.Interfaces;
 using JobApplicationTracker.Api.Models.Entities;
 using JobApplicationTracker.Api.Models.Persistence;
