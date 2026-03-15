@@ -310,43 +310,33 @@ const cancelDelete = (): void => {
               Add interview
             </button>
           </div>
-          <div class="card__body">
+          <div class="card__body card__body--interviews">
             <InterviewList
               :interviews="interviews"
               @edit="startEditInterview"
               @delete="confirmDeleteInterview"
             />
+
+            <section v-if="showInterviewForm" class="interview-form-panel">
+              <header class="interview-form-panel__header">
+                <h3 class="interview-form-panel__title">
+                  {{ isEditingInterview ? 'Edit Interview' : 'Schedule Interview' }}
+                </h3>
+                <button type="button" class="btn btn--ghost" @click="cancelInterviewForm">
+                  Close
+                </button>
+              </header>
+
+              <InterviewForm
+                :mode="isEditingInterview ? 'edit' : 'create'"
+                :initialValues="selectedInterview"
+                :submitting="interviewSubmitting"
+                @submit="handleInterviewSubmit"
+                @cancel="cancelInterviewForm"
+              />
+            </section>
           </div>
         </section>
-      </div>
-
-      <InterviewForm
-        v-if="showInterviewForm"
-        :mode="isEditingInterview ? 'edit' : 'create'"
-        :initialValues="selectedInterview"
-        :submitting="interviewSubmitting"
-        @submit="handleInterviewSubmit"
-        @cancel="cancelInterviewForm"
-      />
-
-      <div v-if="showInterviewForm" class="modal-overlay" @click="cancelInterviewForm">
-        <div class="modal" @click.stop>
-          <header class="modal__header">
-            <h2 class="modal__title">
-              {{ isEditingInterview ? 'Edit Interview' : 'Schedule Interview' }}
-            </h2>
-            <button type="button" class="modal__close" @click="cancelInterviewForm">✕</button>
-          </header>
-          <div class="modal__body">
-            <InterviewForm
-              :mode="isEditingInterview ? 'edit' : 'create'"
-              :initialValues="selectedInterview"
-              :submitting="interviewSubmitting"
-              @submit="handleInterviewSubmit"
-              @cancel="cancelInterviewForm"
-            />
-          </div>
-        </div>
       </div>
 
       <ConfirmDialog
@@ -373,9 +363,13 @@ const cancelDelete = (): void => {
 .page__container {
   max-width: 1024px;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 1.5rem;
+}
+
+.page__content {
+  display: grid;
+  gap: 1.25rem;
 }
 
 .page__header {
@@ -427,7 +421,7 @@ const cancelDelete = (): void => {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  padding: 1.75rem 1.75rem 0;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid rgba(140, 152, 164, 0.15);
 }
 
@@ -464,10 +458,14 @@ const cancelDelete = (): void => {
 }
 
 .card__body {
-  padding: 1.75rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
+}
+
+.card__body--interviews {
+  gap: 1rem;
 }
 
 .meta-grid {
@@ -505,6 +503,8 @@ const cancelDelete = (): void => {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(140, 152, 164, 0.15);
 }
 
 .section__title {
@@ -525,7 +525,44 @@ const cancelDelete = (): void => {
 
 .card__header--with-action {
   align-items: center;
-  padding: 1.75rem 1.75rem 0;
+}
+
+.interview-form-panel {
+  border: 1px solid rgba(140, 152, 164, 0.2);
+  border-radius: 10px;
+  background: #fbfcfe;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.interview-form-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(140, 152, 164, 0.2);
+}
+
+.interview-form-panel__title {
+  margin: 0;
+  font-size: 1rem;
+  color: #1c2530;
+}
+
+.interview-form-panel :deep(.interview-form) {
+  max-width: none;
+  margin: 0;
+}
+
+.interview-form-panel :deep(.form-group) {
+  margin-bottom: 1rem;
+}
+
+.interview-form-panel :deep(.form-actions) {
+  margin-top: 1.25rem;
 }
 
 /* Button styles for this view */
@@ -562,58 +599,15 @@ const cancelDelete = (): void => {
   background-color: #e2e8f0;
 }
 
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  z-index: 1000;
-}
-
-.modal {
-  width: min(600px, 100%);
-  max-height: 90vh;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.25);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.modal__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem 0.75rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.modal__title {
-  margin: 0;
-  font-size: 1.25rem;
-  color: #1c2530;
-}
-
-.modal__close {
-  border: none;
-  background: transparent;
-  font-size: 1.25rem;
-  cursor: pointer;
+.btn--ghost {
+  background-color: transparent;
   color: #5f6a77;
-  padding: 0.25rem;
+  border: 1px solid rgba(140, 152, 164, 0.35);
 }
 
-.modal__close:hover {
+.btn--ghost:hover {
+  background-color: #f3f6fb;
   color: #2b2b2b;
-}
-
-.modal__body {
-  padding: 1rem 1.5rem 1.5rem;
-  overflow-y: auto;
 }
 
 @media (max-width: 720px) {
