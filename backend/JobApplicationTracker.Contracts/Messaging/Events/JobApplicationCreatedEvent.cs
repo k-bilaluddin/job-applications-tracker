@@ -1,8 +1,8 @@
-﻿namespace JobApplicationTracker.Api.Messaging.Events
+namespace JobApplicationTracker.Contracts.Messaging.Events
 {
     public sealed class JobApplicationCreatedEvent
     {
-        public string ApplicationId { get; set; }
+        public string ApplicationId { get; set; } = string.Empty;
         public string CompanyName { get; set; } = string.Empty;
         public string JobTitle { get; set; } = string.Empty;
         public DateTime AppliedOnUtc { get; set; }

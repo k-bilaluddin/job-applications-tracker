@@ -1,26 +1,24 @@
-﻿using JobApplicationTracker.Api.Messaging.Configurations;
-using JobApplicationTracker.Api.Messaging.Connection;
-using JobApplicationTracker.Api.Messaging.Consumers;
-using JobApplicationTracker.Api.Messaging.Events;
-using JobApplicationTracker.Api.Messaging.Handlers;
-using JobApplicationTracker.Api.Messaging.Interfaces;
-using JobApplicationTracker.Api.Messaging.Publishers;
-using JobApplicationTracker.Api.Messaging.Serialization;
+using JobApplicationTracker.Contracts.Messaging.Events;
+using JobApplicationTracker.Worker.Messaging.Configurations;
+using JobApplicationTracker.Worker.Messaging.Connection;
+using JobApplicationTracker.Worker.Messaging.Consumers;
+using JobApplicationTracker.Worker.Messaging.Handlers;
+using JobApplicationTracker.Worker.Messaging.Interfaces;
+using JobApplicationTracker.Worker.Messaging.Serialization;
 using System.Text.Json;
 
-namespace JobApplicationTracker.Api.Messaging.DependencyInjection
+namespace JobApplicationTracker.Worker.Messaging.DependencyInjection
 {
     public static class MessagingServiceCollectionExtensions
     {
-        public static IServiceCollection AddRabbitMqMessaging(
+        public static IServiceCollection AddRabbitMqConsumers(
             this IServiceCollection services,
             IConfiguration configuration)
         {
             var rabbitMqOptions = configuration
-                 .GetSection(RabbitMqOptions.SectionName)
-                 .Get<RabbitMqOptions>()
-                 ?? throw new InvalidOperationException("RabbitMq configuration is missing.");
-
+                .GetSection(RabbitMqOptions.SectionName)
+                .Get<RabbitMqOptions>()
+                ?? throw new InvalidOperationException("RabbitMq configuration is missing.");
 
             services.AddSingleton(rabbitMqOptions);
 
@@ -32,10 +30,10 @@ namespace JobApplicationTracker.Api.Messaging.DependencyInjection
 
             services.AddSingleton<IEventSerializer, JsonEventSerializer>();
             services.AddSingleton<IRabbitMqConnectionProvider, RabbitMqConnectionProvider>();
-            services.AddSingleton<IMessagePublisher, RabbitMqMessagePublisher>();
 
             services.AddSingleton<IMessageHandler<JobApplicationCreatedEvent>, JobApplicationCreatedEventHandler>();
             services.AddSingleton<IMessageConsumer, JobApplicationCreatedConsumer>();
+
             services.AddHostedService<MessagingHostedService>();
 
             return services;

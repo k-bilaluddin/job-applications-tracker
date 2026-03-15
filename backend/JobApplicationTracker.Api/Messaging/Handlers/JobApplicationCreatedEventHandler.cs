@@ -1,5 +1,5 @@
-﻿using JobApplicationTracker.Api.Messaging.Events;
-using JobApplicationTracker.Api.Messaging.Interfaces;
+﻿using JobApplicationTracker.Api.Messaging.Interfaces;
+using JobApplicationTracker.Contracts.Messaging.Events;
 
 namespace JobApplicationTracker.Api.Messaging.Handlers
 {

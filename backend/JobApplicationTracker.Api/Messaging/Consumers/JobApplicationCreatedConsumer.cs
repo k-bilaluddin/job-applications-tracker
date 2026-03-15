@@ -1,8 +1,8 @@
 ﻿using JobApplicationTracker.Api.Messaging.Configurations;
 using JobApplicationTracker.Api.Messaging.Connection;
-using JobApplicationTracker.Api.Messaging.Events;
 using JobApplicationTracker.Api.Messaging.Interfaces;
 using JobApplicationTracker.Api.Messaging.Serialization;
+using JobApplicationTracker.Contracts.Messaging.Events;
 
 namespace JobApplicationTracker.Api.Messaging.Consumers
 {

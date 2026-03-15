@@ -25,12 +25,12 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
-        working-directory: JobApplicationTracker.Api
+        run: dotnet restore JobApplicationTracker.sln
+        working-directory: backend
 
-      - name: Build project
-        run: dotnet build --configuration Release --no-restore
-        working-directory: JobApplicationTracker.Api
+      - name: Build solution
+        run: dotnet build JobApplicationTracker.sln --configuration Release --no-restore
+        working-directory: backend
 
   frontend-build:
     name: Build Vue Frontend
@@ -47,12 +47,12 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: job-application-tracker-ui/package-lock.json
+          cache-dependency-path: frontend/job-application-tracker-ui/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: job-application-tracker-ui
+        working-directory: frontend/job-application-tracker-ui
 
       - name: Build project
         run: npm run build
-        working-directory: job-application-tracker-ui
+        working-directory: frontend/job-application-tracker-ui
