@@ -1,5 +1,4 @@
 ﻿using RabbitMQ.Client;
-using JobApplicationTracker.Api.Messaging.Configurations;
 using JobApplicationTracker.Api.Messaging.Serialization;
 using JobApplicationTracker.Api.Messaging.Connection;
 
