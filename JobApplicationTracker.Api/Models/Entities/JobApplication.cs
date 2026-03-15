@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace JobApplicationTracker.Api.Models.Entities
+﻿namespace JobApplicationTracker.Api.Models.Entities
 {
     public class JobApplication
     {

@@ -5,12 +5,6 @@ using JobApplicationTracker.Api.Messaging.Publishers;
 using JobApplicationTracker.Api.Models.Entities;
 using JobApplicationTracker.Api.Models.Request;
 using JobApplicationTracker.Api.Models.Response;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace JobApplicationTracker.Api.Handlers
 {

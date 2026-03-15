@@ -3,7 +3,6 @@ using JobApplicationTracker.Api.Messaging.Connection;
 using JobApplicationTracker.Api.Messaging.Events;
 using JobApplicationTracker.Api.Messaging.Interfaces;
 using JobApplicationTracker.Api.Messaging.Serialization;
-using Microsoft.Extensions.Options;
 
 namespace JobApplicationTracker.Api.Messaging.Consumers
 {
