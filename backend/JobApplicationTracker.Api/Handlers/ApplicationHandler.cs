@@ -1,10 +1,10 @@
 ﻿using JobApplicationTracker.Api.Interfaces;
 using JobApplicationTracker.Api.Messaging.Configurations;
-using JobApplicationTracker.Api.Messaging.Events;
 using JobApplicationTracker.Api.Messaging.Publishers;
 using JobApplicationTracker.Api.Models.Entities;
 using JobApplicationTracker.Api.Models.Request;
 using JobApplicationTracker.Api.Models.Response;
+using JobApplicationTracker.Contracts.Messaging.Events;
 
 namespace JobApplicationTracker.Api.Handlers
 {
@@ -14,8 +14,10 @@ namespace JobApplicationTracker.Api.Handlers
         private readonly IMessagePublisher _eventPublisher;
         private readonly RabbitMqOptions _rabbitMqOptions;
 
-
-        public ApplicationHandler(IApplicationRepository repository, IMessagePublisher eventPublisher, RabbitMqOptions rabbitMqOptions)
+        public ApplicationHandler(
+            IApplicationRepository repository,
+            IMessagePublisher eventPublisher,
+            RabbitMqOptions rabbitMqOptions)
         {
             _repository = repository;
             _eventPublisher = eventPublisher;
@@ -37,29 +39,21 @@ namespace JobApplicationTracker.Api.Handlers
                 JobTitle = request.JobTitle.Trim(),
                 Location = request.Location?.Trim(),
                 JobUrl = request.JobUrl?.Trim(),
-
                 SourceType = request.SourceType.Trim(),
                 SourceReference = request.SourceReference?.Trim(),
-
                 Status = request.Status.Trim(),
                 AppliedDate = request.AppliedDate,
-
                 ContactName = request.ContactName?.Trim(),
                 ContactEmail = request.ContactEmail?.Trim(),
-
                 WorkMode = request.WorkMode?.Trim(),
                 EmploymentType = request.EmploymentType?.Trim(),
-
                 SalaryMin = request.SalaryMin,
                 SalaryMax = request.SalaryMax,
                 Currency = request.Currency?.Trim(),
                 SalaryPeriod = request.SalaryPeriod?.Trim(),
-
                 NextActionDate = request.NextActionDate,
                 Notes = request.Notes?.Trim(),
-
                 Interviews = new List<InterviewRound>(),
-
                 CreatedUtc = utcNow,
                 UpdatedUtc = utcNow
             };
@@ -77,39 +71,17 @@ namespace JobApplicationTracker.Api.Handlers
                     Status = entity.Status
                 };
 
-                await _eventPublisher.PublishAsync(_rabbitMqOptions.JobApplicationCreatedQueueName, createdEvent, cancellationToken);
+                await _eventPublisher.PublishAsync(
+                    _rabbitMqOptions.JobApplicationCreatedQueueName,
+                    createdEvent,
+                    cancellationToken);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                // Log the exception (not implemented here)
                 Console.WriteLine($"Failed to publish event: {ex.Message}");
             }
 
             return MapToResponse(entity);
-        }
-
-        public async Task<JobApplicationResponse?> GetByIdAsync(
-            string id,
-            CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                throw new ArgumentException("Application id is required.", nameof(id));
-            }
-
-            var entity = await _repository.GetByIdAsync(id, cancellationToken);
-
-            return entity is null ? null : MapToResponse(entity);
-        }
-
-        public async Task<List<JobApplicationResponse>> GetAllAsync(
-            CancellationToken cancellationToken)
-        {
-            var entities = await _repository.GetAllAsync(cancellationToken);
-
-            return entities
-                .Select(MapToResponse)
-                .ToList();
         }
 
         public async Task<JobApplicationResponse?> UpdateAsync(
@@ -130,24 +102,22 @@ namespace JobApplicationTracker.Api.Handlers
                 return null;
             }
 
+            var previousStatus = entity.Status;
+            var previousNextActionDate = entity.NextActionDate;
+
             entity.JobTitle = request.JobTitle.Trim();
             entity.Location = request.Location?.Trim();
             entity.JobUrl = request.JobUrl?.Trim();
-
             entity.ContactName = request.ContactName?.Trim();
             entity.ContactEmail = request.ContactEmail?.Trim();
-
             entity.WorkMode = request.WorkMode?.Trim();
             entity.EmploymentType = request.EmploymentType?.Trim();
-
             entity.SalaryMin = request.SalaryMin;
             entity.SalaryMax = request.SalaryMax;
             entity.Currency = request.Currency?.Trim();
             entity.SalaryPeriod = request.SalaryPeriod?.Trim();
-
             entity.NextActionDate = request.NextActionDate;
             entity.Notes = request.Notes?.Trim();
-
             entity.UpdatedUtc = DateTime.UtcNow;
 
             var updated = await _repository.UpdateAsync(entity, cancellationToken);
@@ -156,7 +126,51 @@ namespace JobApplicationTracker.Api.Handlers
                 return null;
             }
 
+            try
+            {
+                var updatedEvent = new JobApplicationUpdatedEvent
+                {
+                    ApplicationId = entity.Id,
+                    CompanyName = entity.CompanyName,
+                    JobTitle = entity.JobTitle,
+                    Status = entity.Status,
+                    PreviousStatus = previousStatus,
+                    NextActionDate = entity.NextActionDate,
+                    PreviousNextActionDate = previousNextActionDate,
+                    Notes = entity.Notes,
+                    UpdatedAtUtc = entity.UpdatedUtc
+                };
+
+                await _eventPublisher.PublishAsync(
+                    _rabbitMqOptions.JobApplicationUpdatedQueueName,
+                    updatedEvent,
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to publish event: {ex.Message}");
+            }
+
             return MapToResponse(entity);
+        }
+
+        public async Task<JobApplicationResponse?> GetByIdAsync(
+            string id,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                throw new ArgumentException("Application id is required.", nameof(id));
+            }
+
+            var entity = await _repository.GetByIdAsync(id, cancellationToken);
+            return entity is null ? null : MapToResponse(entity);
+        }
+
+        public async Task<List<JobApplicationResponse>> GetAllAsync(CancellationToken cancellationToken)
+        {
+            var entities = await _repository.GetAllAsync(cancellationToken);
+            return entities.Select(MapToResponse).ToList();
         }
 
         public async Task<JobApplicationResponse?> UpdateStatusAsync(
@@ -204,7 +218,9 @@ namespace JobApplicationTracker.Api.Handlers
             return MapToResponse(entity);
         }
 
-        public async Task<List<InterviewRoundResponse>?> GetInterviewsAsync(string applicationId, CancellationToken cancellationToken)
+        public async Task<List<InterviewRoundResponse>?> GetInterviewsAsync(
+            string applicationId,
+            CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(applicationId))
             {
@@ -223,7 +239,10 @@ namespace JobApplicationTracker.Api.Handlers
                 .ToList();
         }
 
-        public async Task<InterviewRoundResponse?> AddInterviewAsync(string applicationId, AddInterviewRoundRequest request, CancellationToken cancellationToken)
+        public async Task<InterviewRoundResponse?> AddInterviewAsync(
+            string applicationId,
+            AddInterviewRoundRequest request,
+            CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(applicationId))
             {
@@ -267,7 +286,11 @@ namespace JobApplicationTracker.Api.Handlers
             return MapInterviewToResponse(interview);
         }
 
-        public async Task<InterviewRoundResponse?> UpdateInterviewAsync(string applicationId, string interviewId, UpdateInterviewRoundRequest request, CancellationToken cancellationToken)
+        public async Task<InterviewRoundResponse?> UpdateInterviewAsync(
+            string applicationId,
+            string interviewId,
+            UpdateInterviewRoundRequest request,
+            CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(applicationId))
             {
@@ -317,7 +340,10 @@ namespace JobApplicationTracker.Api.Handlers
             return MapInterviewToResponse(interview);
         }
 
-        public async Task<bool> DeleteInterviewAsync(string applicationId, string interviewId, CancellationToken cancellationToken)
+        public async Task<bool> DeleteInterviewAsync(
+            string applicationId,
+            string interviewId,
+            CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(applicationId))
             {
@@ -344,8 +370,7 @@ namespace JobApplicationTracker.Api.Handlers
             entity.Interviews.Remove(interview);
             entity.UpdatedUtc = DateTime.UtcNow;
 
-            var updated = await _repository.UpdateAsync(entity, cancellationToken);
-            return updated;
+            return await _repository.UpdateAsync(entity, cancellationToken);
         }
 
         private static void ValidateCreateRequest(CreateJobApplicationRequest request)
@@ -424,32 +449,24 @@ namespace JobApplicationTracker.Api.Handlers
                 JobTitle = entity.JobTitle,
                 Location = entity.Location,
                 JobUrl = entity.JobUrl,
-
                 SourceType = entity.SourceType,
                 SourceReference = entity.SourceReference,
-
                 Status = entity.Status,
                 AppliedDate = entity.AppliedDate,
-
                 ContactName = entity.ContactName,
                 ContactEmail = entity.ContactEmail,
-
                 WorkMode = entity.WorkMode,
                 EmploymentType = entity.EmploymentType,
-
                 SalaryMin = entity.SalaryMin,
                 SalaryMax = entity.SalaryMax,
                 Currency = entity.Currency,
                 SalaryPeriod = entity.SalaryPeriod,
-
                 NextActionDate = entity.NextActionDate,
                 Notes = entity.Notes,
-
                 Interviews = entity.Interviews
                     .Select(MapInterviewToResponse)
                     .OrderBy(x => x.RoundNumber)
                     .ToList(),
-
                 CreatedUtc = entity.CreatedUtc,
                 UpdatedUtc = entity.UpdatedUtc
             };
