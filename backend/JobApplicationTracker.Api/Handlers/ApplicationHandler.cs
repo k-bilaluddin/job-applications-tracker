@@ -199,7 +199,11 @@ namespace JobApplicationTracker.Api.Handlers
                 return null;
             }
 
-            entity.Status = request.Status.Trim();
+            var previousStatus = entity.Status;
+            var newStatus = request.Status.Trim();
+
+            // Update entity
+            entity.Status = newStatus   ;
             entity.NextActionDate = request.NextActionDate;
 
             if (!string.IsNullOrWhiteSpace(request.Notes))
